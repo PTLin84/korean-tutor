@@ -1,0 +1,17 @@
+# Secrets
+.env
+
+# Database (local data, not source code)
+*.db
+*.db-shm
+*.db-wal
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/

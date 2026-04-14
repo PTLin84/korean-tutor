@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>韓語學習</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- ── Dashboard ───────────────────────────────────────────────── -->
+<div id="view-dashboard" class="view active">
+  <header class="page-header">
+    <h1>韓語學習 🇰🇷</h1>
+  </header>
+
+  <div class="stats-grid">
+    <div class="stat-card accent">
+      <div class="stat-num" id="stat-streak">0</div>
+      <div class="stat-label">連續天數 🔥</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-total">0</div>
+      <div class="stat-label">總單字數</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-due">0</div>
+      <div class="stat-label">今日待複習</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-reviewed">0</div>
+      <div class="stat-label">今日已複習</div>
+    </div>
+  </div>
+
+  <button class="btn-primary" id="btn-start-review" onclick="switchView('review')">
+    開始複習
+  </button>
+</div>
+
+<!-- ── Log Session ──────────────────────────────────────────────── -->
+<div id="view-log" class="view">
+  <header class="page-header">
+    <h1>記錄課堂</h1>
+  </header>
+
+  <!-- No active session -->
+  <div id="log-no-session">
+    <p class="hint">開始記錄今天的課堂單字</p>
+    <div class="card" style="margin-top:8px;">
+      <div class="form-group">
+        <label>課堂備註（選填）</label>
+        <input type="text" id="session-notes" placeholder="例：第3課、老師：金老師…">
+      </div>
+      <button class="btn-primary" style="width:100%;margin:0;" onclick="startNewSession()">開始新課堂</button>
+    </div>
+  </div>
+
+  <!-- Active session -->
+  <div id="log-active-session" class="hidden">
+    <div class="session-info">
+      <span id="session-date-display"></span>
+      <span id="session-word-count">0 個單字</span>
+      <button class="btn-end-session" onclick="endSession()">結束課堂</button>
+    </div>
+
+    <div class="card add-word-form">
+      <h3>新增單字</h3>
+      <div class="form-group">
+        <label>韓語單字 <span class="required">*</span></label>
+        <input type="text" id="word-korean" placeholder="例：안녕하세요" autocomplete="off" autocorrect="off">
+      </div>
+      <div class="form-group">
+        <label>繁體中文意思 <span class="required">*</span></label>
+        <input type="text" id="word-meaning" placeholder="例：你好（問候語）" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>課堂例句（選填）</label>
+        <input type="text" id="word-sentence" placeholder="例：안녕하세요, 저는 Kyle입니다" autocomplete="off" autocorrect="off">
+      </div>
+      <button class="btn-primary" style="width:100%;margin:0;" onclick="addWord()">新增單字</button>
+    </div>
+
+    <div id="session-words" class="word-list"></div>
+  </div>
+</div>
+
+<!-- ── Review ───────────────────────────────────────────────────── -->
+<div id="view-review" class="view">
+  <header class="page-header">
+    <h1>複習</h1>
+    <span id="review-progress"></span>
+  </header>
+
+  <div id="review-loading" class="empty-state">
+    <div class="empty-icon">⏳</div>
+    <p>載入中…</p>
+  </div>
+
+  <div id="review-empty" class="empty-state hidden">
+    <div class="empty-icon">🎉</div>
+    <h2>今天複習完成！</h2>
+    <p>太棒了，明天繼續加油！</p>
+  </div>
+
+  <!-- Flashcard -->
+  <div id="format-flashcard" class="hidden">
+    <div class="card review-card flashcard" onclick="flipCard()">
+      <div id="fc-front">
+        <div class="card-korean" id="fc-korean"></div>
+        <div class="card-hint">點擊翻面 👆</div>
+      </div>
+      <div id="fc-back" class="hidden">
+        <div class="card-meaning" id="fc-meaning"></div>
+        <div class="card-sentence" id="fc-sentence"></div>
+        <div class="card-notes" id="fc-notes"></div>
+      </div>
+    </div>
+    <div id="fc-buttons" class="result-buttons hidden">
+      <button class="btn-fail" onclick="submitResult('fail')">不記得 😟</button>
+      <button class="btn-hard" onclick="submitResult('hard')">模糊 😅</button>
+      <button class="btn-pass" onclick="submitResult('pass')">記得 😊</button>
+    </div>
+  </div>
+
+  <!-- Fill in blank -->
+  <div id="format-fill-blank" class="hidden">
+    <div class="card review-card" style="align-items:stretch;">
+      <div class="card-label">看中文，寫韓語</div>
+      <div class="card-meaning" id="fb-meaning" style="margin:16px 0;"></div>
+      <div class="fill-sentence" id="fb-sentence" style="display:none;"></div>
+      <input type="text" id="fb-input" class="fill-input" placeholder="輸入韓語…"
+             autocomplete="off" autocorrect="off" autocapitalize="off"
+             onkeydown="if(event.key==='Enter')checkFillBlank()">
+      <button class="btn-primary" style="width:100%;margin:12px 0 0;" onclick="checkFillBlank()">確認</button>
+      <div id="fb-result" class="fb-result hidden"></div>
+    </div>
+    <div id="fb-buttons" class="result-buttons hidden">
+      <button class="btn-fail" onclick="submitResult('fail')">不記得</button>
+      <button class="btn-hard" onclick="submitResult('hard')">蒙對了</button>
+      <button class="btn-pass" onclick="submitResult('pass')">答對了！</button>
+    </div>
+  </div>
+
+  <!-- Multiple choice -->
+  <div id="format-multiple-choice" class="hidden">
+    <div class="card review-card" style="align-items:stretch;">
+      <div class="card-label">選出正確的韓語</div>
+      <div class="card-meaning" id="mc-meaning" style="margin:16px 0;"></div>
+      <div class="mc-options" id="mc-options"></div>
+    </div>
+    <div id="mc-buttons" class="result-buttons hidden">
+      <button class="btn-fail" onclick="submitResult('fail')">不記得</button>
+      <button class="btn-hard" onclick="submitResult('hard')">蒙對的</button>
+      <button class="btn-pass" onclick="submitResult('pass')">確實記得</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Bottom nav ───────────────────────────────────────────────── -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-dashboard" onclick="switchView('dashboard')">
+    <span class="nav-icon">📊</span>
+    <span>首頁</span>
+  </button>
+  <button class="nav-btn" id="nav-log" onclick="switchView('log')">
+    <span class="nav-icon">✏️</span>
+    <span>記錄</span>
+  </button>
+  <button class="nav-btn" id="nav-review" onclick="switchView('review')">
+    <span class="nav-icon">🔄</span>
+    <span>複習</span>
+  </button>
+</nav>
+
+<div id="toast"></div>
+
+<!-- ── Validation modal ─────────────────────────────────────────────────── -->
+<div id="validate-overlay" class="modal-overlay hidden" onclick="dismissValidation()">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-title">⚠️ AI 建議修正</div>
+    <p id="validate-message" class="modal-message"></p>
+    <div class="modal-diff">
+      <div class="diff-row" id="diff-korean-row">
+        <span class="diff-label">韓語</span>
+        <span class="diff-original" id="diff-korean-orig"></span>
+        <span class="diff-arrow">→</span>
+        <span class="diff-suggested" id="diff-korean-sugg"></span>
+      </div>
+      <div class="diff-row" id="diff-meaning-row">
+        <span class="diff-label">意思</span>
+        <span class="diff-original" id="diff-meaning-orig"></span>
+        <span class="diff-arrow">→</span>
+        <span class="diff-suggested" id="diff-meaning-sugg"></span>
+      </div>
+      <div class="diff-row" id="diff-sentence-row">
+        <span class="diff-label">例句</span>
+        <span class="diff-original" id="diff-sentence-orig"></span>
+        <span class="diff-arrow">→</span>
+        <span class="diff-suggested" id="diff-sentence-sugg"></span>
+      </div>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn-secondary" onclick="proceedWithOriginal()">保留原本</button>
+      <button class="btn-primary modal-btn-accept" onclick="proceedWithSuggestion()">接受建議</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
