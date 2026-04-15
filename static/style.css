@@ -225,7 +225,7 @@ html, body {
   color: var(--accent);
 }
 .card-meaning {
-  font-size: 32px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--text);
 }
