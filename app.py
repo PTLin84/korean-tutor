@@ -1,7 +1,9 @@
 import json
+import logging
 import random
 import threading
 from datetime import date, timedelta
+from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
@@ -10,10 +12,33 @@ import augment
 import database as db
 import srs
 
+# ── Logging setup ─────────────────────────────────────────────────────────────
+
+LOG_FILE = Path(__file__).parent / "app.log"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.FileHandler(LOG_FILE, encoding="utf-8"),
+        logging.StreamHandler(),
+    ],
+)
+
+# Pipe Werkzeug request logs into the same handlers
+logging.getLogger("werkzeug").handlers = logging.getLogger().handlers
+logging.getLogger("werkzeug").propagate = False
+
+logger = logging.getLogger(__name__)
+
+# ─────────────────────────────────────────────────────────────────────────────
+
 app = Flask(__name__, static_folder="static")
 CORS(app)
 
 db.init_db()
+logger.info("App started — database initialised")
 
 
 # ── Static files ─────────────────────────────────────────────────────────────
@@ -42,6 +67,7 @@ def new_session():
         )
         session_id = cur.lastrowid
 
+    logger.info("New session created: id=%s date=%s notes=%r", session_id, today, notes)
     return jsonify({"session_id": session_id, "date": today, "notes": notes})
 
 
@@ -84,10 +110,11 @@ def validate_word():
 
     try:
         result = augment.validate_word(korean, english, sentence)
+        if not result.get("ok"):
+            logger.info("Validation flagged: korean=%r → %r", korean, result.get("suggested_korean"))
         return jsonify(result)
     except Exception as e:
-        # On validation error, let the user proceed rather than blocking them
-        print(f"[validate] error: {e}")
+        logger.warning("Validation error (allowing through): %s", e)
         return jsonify({"ok": True})
 
 
@@ -116,6 +143,8 @@ def add_word():
             (word_id, today),
         )
 
+    logger.info("Word added: id=%s korean=%r english=%r session=%s", word_id, korean, english, session_id)
+
     # Trigger async Claude augmentation
     def do_augment():
         try:
@@ -133,8 +162,9 @@ def add_word():
                         result.get("common_mistakes", ""),
                     ),
                 )
+            logger.info("Augmentation complete: word_id=%s", word_id)
         except Exception as e:
-            print(f"[augment] word {word_id} failed: {e}")
+            logger.error("Augmentation failed: word_id=%s error=%s", word_id, e)
 
     threading.Thread(target=do_augment, daemon=True).start()
 
@@ -177,6 +207,7 @@ def delete_word(word_id):
         conn.execute("DELETE FROM augmentations WHERE word_id = ?", (word_id,))
         conn.execute("DELETE FROM words         WHERE id = ?",      (word_id,))
 
+    logger.info("Word deleted: id=%s korean=%r", word_id, korean)
     return jsonify({"deleted": word_id, "korean": korean})
 
 
@@ -340,6 +371,7 @@ def review_result():
             (word_id, today, result),
         )
 
+    logger.info("Review result: word_id=%s result=%s new_interval=%s next_due=%s", word_id, result, new_interval, new_due)
     return jsonify({"new_interval": new_interval, "next_due": new_due})
 
 
