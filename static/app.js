@@ -529,6 +529,7 @@ function onWordsSearch() {
 }
 
 function toggleWordDetail(id) {
+  if (suppressNextClick) { suppressNextClick = false; return; }
   const detail = document.getElementById(`wb-detail-${id}`);
   const arrow  = document.getElementById(`wb-arrow-${id}`);
   if (!detail) return;
@@ -598,7 +599,7 @@ function wbCard(w) {
   return `<div class="wb-row" id="wb-row-${w.id}">
     <div class="wb-delete-bg">
       <button class="wb-delete-btn" onclick="confirmDeleteWord(${w.id}, '${esc(w.korean)}')">
-        🗑 刪除
+        刪除
       </button>
     </div>
     <div class="wb-card" id="wb-card-${w.id}" onclick="toggleWordDetail(${w.id})">
@@ -622,6 +623,7 @@ const SWIPE_MIN_MOVE = 10;   // px horizontal before it's treated as a swipe
 
 let swipeState = null;        // active touch/drag state
 let openSwipeId = null;       // word id whose card is currently swiped open
+let suppressNextClick = false; // true after a real swipe to cancel the trailing click
 
 // Attach swipe listeners after cards are rendered
 function attachSwipeListeners() {
@@ -676,7 +678,10 @@ function swipeMove(e, id, clientX) {
 function swipeEnd(id) {
   if (!swipeState || swipeState.id !== id) return;
   const dx = swipeState.currentX - swipeState.startX;
+  const wasSwiping = swipeState.isSwiping;
   swipeState = null;
+
+  if (wasSwiping) suppressNextClick = true;
 
   const card = document.getElementById(`wb-card-${id}`);
   if (!card) return;
