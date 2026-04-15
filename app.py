@@ -122,9 +122,9 @@ def validate_word():
 def add_word():
     data = request.json
     session_id = data.get("session_id")
-    korean = data.get("korean", "").strip()
-    english = data.get("english", "").strip()  # Traditional Chinese meaning
-    sentence = data.get("example_sentence", "").strip()
+    korean = (data.get("korean") or "").strip()
+    english = (data.get("english") or "").strip()  # Traditional Chinese meaning
+    sentence = (data.get("example_sentence") or "").strip()
 
     if not korean or not english:
         return jsonify({"error": "korean and english fields are required"}), 400

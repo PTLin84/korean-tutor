@@ -116,8 +116,9 @@ def validate_word(korean: str, meaning: str, sentence: str) -> dict:
     if result.get("ok"):
         return {"ok": True}
 
-    # Fill in original values for fields Claude didn't suggest changing
-    result.setdefault("suggested_korean", korean)
-    result.setdefault("suggested_meaning", meaning)
-    result.setdefault("suggested_sentence", sentence)
+    # Fill in original values for fields Claude didn't suggest changing,
+    # including when Claude explicitly returned null for a field.
+    result["suggested_korean"]   = result.get("suggested_korean")   or korean
+    result["suggested_meaning"]  = result.get("suggested_meaning")  or meaning
+    result["suggested_sentence"] = result.get("suggested_sentence") or sentence
     return result
