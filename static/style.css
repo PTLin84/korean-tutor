@@ -442,6 +442,18 @@ html, body {
   display: flex;
   gap: 10px;
 }
+.modal-buttons .btn-abort {
+  flex: 1;
+  padding: 13px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
 .modal-buttons .btn-secondary {
   flex: 1;
   padding: 13px;
