@@ -547,6 +547,7 @@ function toggleWordDetail(id) {
     arrow.textContent = '›';
     wbExpandedId = null;
   } else {
+    snapCardClosed(id);
     detail.classList.remove('hidden');
     arrow.textContent = '⌄';
     wbExpandedId = id;
@@ -647,6 +648,7 @@ function attachSwipeListeners() {
 }
 
 function swipeStart(e, id, clientX) {
+  if (id === wbExpandedId) return;
   swipeState = { id, startX: clientX, currentX: clientX, isSwiping: false };
 }
 
