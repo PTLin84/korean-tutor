@@ -342,16 +342,7 @@ function showFillBlank(card) {
   showOnly('format-fill-blank');
   document.getElementById('fb-meaning').textContent = card.english;
 
-  const sentenceEl = document.getElementById('fb-sentence');
-  if (card.example_sentence_user) {
-    const blanked = card.example_sentence_user.replace(
-      new RegExp(escapeRegex(card.korean), 'g'), '___'
-    );
-    sentenceEl.textContent = blanked;
-    sentenceEl.style.display = 'block';
-  } else {
-    sentenceEl.style.display = 'none';
-  }
+  document.getElementById('fb-sentence').style.display = 'none';
 
   const fbInput = document.getElementById('fb-input');
   fbInput.disabled = false;
