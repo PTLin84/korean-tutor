@@ -200,7 +200,9 @@ html, body {
 /* ── Review cards ────────────────────────────────────────────────── */
 .review-card {
   margin: 16px;
-  min-height: 260px;
+  min-height: 340px;
+  max-height: 60vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -223,18 +225,18 @@ html, body {
   color: var(--accent);
 }
 .card-meaning {
-  font-size: 26px;
+  font-size: 32px;
   font-weight: 600;
   color: var(--text);
 }
 .card-sentence {
-  font-size: 15px;
+  font-size: 17px;
   color: var(--text-secondary);
   font-style: italic;
   padding: 0 8px;
 }
 .card-notes {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-secondary);
   background: var(--bg);
   border-radius: 8px;
