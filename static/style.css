@@ -553,7 +553,8 @@ html, body {
 .wb-detail {
   padding: 0 16px 16px;
   border-top: 1px solid var(--border);
-  background: #fafafa;
+  background: #f0f4ff;
+  border-radius: 0 0 12px 12px;
 }
 .wb-detail.hidden { display: none; }
 
