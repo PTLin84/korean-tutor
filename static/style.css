@@ -473,7 +473,7 @@ html, body {
 
 /* ── Word bank ──────────────────────────────────────────────────── */
 .words-total {
-  font-size: 13px;
+  font-size: 17px;
   color: var(--text-secondary);
   font-weight: 400;
 }
@@ -491,7 +491,7 @@ html, body {
   padding: 10px 14px;
   border: 1.5px solid var(--border);
   border-radius: 12px;
-  font-size: 15px;
+  font-size: 20px;
   background: #fff;
   color: var(--text);
   outline: none;
@@ -519,13 +519,13 @@ html, body {
 .wb-card-left { flex: 1; min-width: 0; }
 
 .wb-korean {
-  font-size: 19px;
+  font-size: 25px;
   font-weight: 700;
   color: var(--text);
 }
 
 .wb-meaning {
-  font-size: 14px;
+  font-size: 18px;
   color: var(--text-secondary);
   margin-top: 2px;
 }
@@ -539,12 +539,12 @@ html, body {
 }
 
 .wb-date {
-  font-size: 12px;
+  font-size: 16px;
   color: var(--text-secondary);
 }
 
 .srs-badge {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 20px;
@@ -555,7 +555,7 @@ html, body {
 .srs-future   { background: #f0f0f2; color: var(--text-secondary); }
 
 .wb-arrow {
-  font-size: 20px;
+  font-size: 26px;
   color: var(--text-secondary);
   flex-shrink: 0;
   width: 20px;
@@ -573,7 +573,7 @@ html, body {
 .wb-detail.hidden { display: none; }
 
 .wb-section-title {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -582,7 +582,7 @@ html, body {
 }
 
 .wb-section-body {
-  font-size: 13px;
+  font-size: 17px;
   color: var(--text);
   line-height: 1.6;
 }
@@ -594,8 +594,8 @@ html, body {
   margin-bottom: 6px;
   border: 1px solid var(--border);
 }
-.wb-sentence-korean { font-size: 14px; font-weight: 600; color: var(--text); }
-.wb-sentence-chinese { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+.wb-sentence-korean { font-size: 18px; font-weight: 600; color: var(--text); }
+.wb-sentence-chinese { font-size: 17px; color: var(--text-secondary); margin-top: 2px; }
 
 .wb-related {
   display: flex;
@@ -607,7 +607,7 @@ html, body {
   color: var(--accent);
   border-radius: 20px;
   padding: 3px 10px;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
 }
 
