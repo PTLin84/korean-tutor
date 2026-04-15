@@ -9,6 +9,14 @@ let cardFlipped = false;
 let mcAnswered = false;
 let fbChecked = false;
 
+// Word bank
+let wbPage = 1;
+let wbTotal = 0;
+let wbHasMore = false;
+let wbSearch = '';
+let wbSearchTimer = null;
+let wbExpandedId = null;
+
 // ── Startup ───────────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
   loadDashboard();
@@ -38,6 +46,7 @@ function switchView(view) {
 
   if (view === 'dashboard') loadDashboard();
   if (view === 'review')    loadReviewQueue();
+  if (view === 'words')     initWordBank();
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
@@ -442,4 +451,156 @@ function escapeRegex(s) {
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
+}
+
+// ── Word bank ─────────────────────────────────────────────────────────────────
+
+function initWordBank() {
+  wbPage = 1;
+  wbSearch = document.getElementById('words-search').value.trim();
+  wbExpandedId = null;
+  document.getElementById('words-list').innerHTML = '';
+  document.getElementById('words-load-more').classList.add('hidden');
+  document.getElementById('words-empty').classList.add('hidden');
+  document.getElementById('words-loading').classList.remove('hidden');
+  fetchWords(true);
+}
+
+async function fetchWords(replace = false) {
+  try {
+    const params = new URLSearchParams({ page: wbPage, limit: 30 });
+    if (wbSearch) params.set('search', wbSearch);
+    const data = await api(`/words?${params}`);
+
+    wbTotal   = data.total;
+    wbHasMore = data.has_more;
+
+    document.getElementById('words-loading').classList.add('hidden');
+    document.getElementById('words-total-label').textContent =
+      wbSearch ? `${data.total} 個結果` : `共 ${data.total} 個單字`;
+
+    const list = document.getElementById('words-list');
+    if (replace) list.innerHTML = '';
+
+    if (data.words.length === 0 && replace) {
+      document.getElementById('words-empty').classList.remove('hidden');
+      document.getElementById('words-load-more').classList.add('hidden');
+      return;
+    }
+
+    data.words.forEach(w => {
+      const el = document.createElement('div');
+      el.innerHTML = wbCard(w);
+      list.appendChild(el.firstChild);
+    });
+
+    // Load more button
+    const lmBtn = document.getElementById('words-load-more');
+    if (wbHasMore) {
+      const remaining = wbTotal - wbPage * 30;
+      document.getElementById('words-remaining').textContent = remaining;
+      lmBtn.classList.remove('hidden');
+    } else {
+      lmBtn.classList.add('hidden');
+    }
+  } catch (e) {
+    document.getElementById('words-loading').classList.add('hidden');
+    console.error('fetchWords error', e);
+  }
+}
+
+async function loadMoreWords() {
+  wbPage++;
+  document.getElementById('words-load-more').classList.add('hidden');
+  await fetchWords(false);
+}
+
+function onWordsSearch() {
+  clearTimeout(wbSearchTimer);
+  wbSearchTimer = setTimeout(() => {
+    wbPage = 1;
+    wbSearch = document.getElementById('words-search').value.trim();
+    document.getElementById('words-loading').classList.remove('hidden');
+    document.getElementById('words-empty').classList.add('hidden');
+    fetchWords(true);
+  }, 350);
+}
+
+function toggleWordDetail(id) {
+  const detail = document.getElementById(`wb-detail-${id}`);
+  const arrow  = document.getElementById(`wb-arrow-${id}`);
+  if (!detail) return;
+
+  const isOpen = !detail.classList.contains('hidden');
+  // Close previously open card
+  if (wbExpandedId && wbExpandedId !== id) {
+    const prev = document.getElementById(`wb-detail-${wbExpandedId}`);
+    const prevArrow = document.getElementById(`wb-arrow-${wbExpandedId}`);
+    if (prev) prev.classList.add('hidden');
+    if (prevArrow) prevArrow.textContent = '›';
+  }
+
+  if (isOpen) {
+    detail.classList.add('hidden');
+    arrow.textContent = '›';
+    wbExpandedId = null;
+  } else {
+    detail.classList.remove('hidden');
+    arrow.textContent = '⌄';
+    wbExpandedId = id;
+  }
+}
+
+function wbSrsBadge(label) {
+  if (!label) return '';
+  if (label === 'overdue')   return '<span class="srs-badge srs-overdue">⚠️ 已逾期</span>';
+  if (label === 'today')     return '<span class="srs-badge srs-today">📅 今日到期</span>';
+  const days = parseInt(label.replace('in_', ''));
+  if (days === 1)            return '<span class="srs-badge srs-soon">明天複習</span>';
+  return `<span class="srs-badge srs-future">${days} 天後複習</span>`;
+}
+
+function wbCard(w) {
+  const badge    = wbSrsBadge(w.srs_label);
+  const date     = w.session_date ? `<span class="wb-date">${w.session_date}</span>` : '';
+  const hasAug   = w.usage_notes || (w.sentences && w.sentences.length);
+
+  const sentences = (w.sentences || []).map(s =>
+    `<div class="wb-sentence">
+       <div class="wb-sentence-korean">${esc(s.korean)}</div>
+       <div class="wb-sentence-chinese">${esc(s.chinese)}</div>
+     </div>`
+  ).join('');
+
+  const usageNotes = w.usage_notes
+    ? `<div class="wb-section-title">使用說明</div>
+       <div class="wb-section-body">${esc(w.usage_notes)}</div>` : '';
+
+  const related = (w.related_words || []).length
+    ? `<div class="wb-section-title">相關詞</div>
+       <div class="wb-related">${w.related_words.map(r =>
+           `<span class="wb-related-chip">${esc(r.korean)} ${esc(r.chinese)}</span>`
+         ).join('')}</div>` : '';
+
+  const mistakes = w.common_mistakes
+    ? `<div class="wb-section-title">常見錯誤</div>
+       <div class="wb-section-body">${esc(w.common_mistakes)}</div>` : '';
+
+  const detail = hasAug
+    ? `<div class="wb-detail hidden" id="wb-detail-${w.id}">
+         ${sentences ? `<div class="wb-section-title">例句</div>${sentences}` : ''}
+         ${usageNotes}${related}${mistakes}
+       </div>` : '';
+
+  return `<div class="wb-card" onclick="toggleWordDetail(${w.id})">
+    <div class="wb-card-main">
+      <div class="wb-card-left">
+        <div class="wb-korean">${esc(w.korean)}</div>
+        <div class="wb-meaning">${esc(w.english)}</div>
+        <div class="wb-meta">${date}${badge}</div>
+      </div>
+      <div class="wb-arrow" id="wb-arrow-${w.id}">${hasAug ? '›' : ''}</div>
+    </div>
+    ${detail}
+  </div>`;
 }

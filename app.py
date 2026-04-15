@@ -160,6 +160,80 @@ def get_augmentation(word_id):
     return jsonify(result)
 
 
+# ── Word bank ─────────────────────────────────────────────────────────────────
+
+@app.route("/words", methods=["GET"])
+def list_words():
+    page   = max(1, int(request.args.get("page", 1)))
+    limit  = max(1, min(50, int(request.args.get("limit", 30))))
+    search = request.args.get("search", "").strip()
+    offset = (page - 1) * limit
+    today  = date.today().isoformat()
+
+    with db.get_db() as conn:
+        if search:
+            pattern = f"%{search}%"
+            total = conn.execute(
+                "SELECT COUNT(*) FROM words WHERE korean LIKE ? OR english LIKE ?",
+                (pattern, pattern)
+            ).fetchone()[0]
+            rows = conn.execute(
+                """SELECT w.id, w.korean, w.english, w.example_sentence_user,
+                          s.date as session_date,
+                          rc.due_date, rc.interval,
+                          a.sentences, a.usage_notes, a.related_words, a.common_mistakes
+                   FROM words w
+                   LEFT JOIN sessions s ON s.id = w.session_id
+                   LEFT JOIN review_cards rc ON rc.word_id = w.id
+                   LEFT JOIN augmentations a ON a.word_id = w.id
+                   WHERE w.korean LIKE ? OR w.english LIKE ?
+                   ORDER BY w.id DESC
+                   LIMIT ? OFFSET ?""",
+                (pattern, pattern, limit, offset)
+            ).fetchall()
+        else:
+            total = conn.execute("SELECT COUNT(*) FROM words").fetchone()[0]
+            rows = conn.execute(
+                """SELECT w.id, w.korean, w.english, w.example_sentence_user,
+                          s.date as session_date,
+                          rc.due_date, rc.interval,
+                          a.sentences, a.usage_notes, a.related_words, a.common_mistakes
+                   FROM words w
+                   LEFT JOIN sessions s ON s.id = w.session_id
+                   LEFT JOIN review_cards rc ON rc.word_id = w.id
+                   LEFT JOIN augmentations a ON a.word_id = w.id
+                   ORDER BY w.id DESC
+                   LIMIT ? OFFSET ?""",
+                (limit, offset)
+            ).fetchall()
+
+    words = []
+    for r in rows:
+        w = dict(r)
+        w["sentences"]    = json.loads(w["sentences"])    if w["sentences"]    else []
+        w["related_words"] = json.loads(w["related_words"]) if w["related_words"] else []
+        # SRS status label
+        if not w["due_date"]:
+            w["srs_label"] = ""
+        elif w["due_date"] < today:
+            w["srs_label"] = "overdue"
+        elif w["due_date"] == today:
+            w["srs_label"] = "today"
+        else:
+            from datetime import date as _date
+            days = (_date.fromisoformat(w["due_date"]) - _date.fromisoformat(today)).days
+            w["srs_label"] = f"in_{days}"
+        words.append(w)
+
+    return jsonify({
+        "words": words,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "has_more": offset + len(words) < total,
+    })
+
+
 # ── Review ────────────────────────────────────────────────────────────────────
 
 @app.route("/review/queue", methods=["GET"])

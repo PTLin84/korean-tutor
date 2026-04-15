@@ -157,6 +157,37 @@
   </div>
 </div>
 
+<!-- ── Word bank view ────────────────────────────────────────────── -->
+<div id="view-words" class="view">
+  <header class="page-header">
+    <h1>單字庫</h1>
+    <span id="words-total-label" class="words-total"></span>
+  </header>
+
+  <div class="words-search-wrap">
+    <input type="search" id="words-search" placeholder="搜尋韓語或中文…"
+           oninput="onWordsSearch()" autocomplete="off" autocorrect="off">
+  </div>
+
+  <div id="words-list"></div>
+
+  <div id="words-load-more" class="words-load-more hidden">
+    <button class="btn-load-more" onclick="loadMoreWords()">
+      載入更多 (<span id="words-remaining"></span> 個)
+    </button>
+  </div>
+
+  <div id="words-empty" class="empty-state hidden">
+    <div class="empty-icon">🔍</div>
+    <p>找不到符合的單字</p>
+  </div>
+
+  <div id="words-loading" class="empty-state">
+    <div class="empty-icon">⏳</div>
+    <p>載入中…</p>
+  </div>
+</div>
+
 <!-- ── Bottom nav ───────────────────────────────────────────────── -->
 <nav class="bottom-nav">
   <button class="nav-btn active" id="nav-dashboard" onclick="switchView('dashboard')">
@@ -170,6 +201,10 @@
   <button class="nav-btn" id="nav-review" onclick="switchView('review')">
     <span class="nav-icon">🔄</span>
     <span>複習</span>
+  </button>
+  <button class="nav-btn" id="nav-words" onclick="switchView('words')">
+    <span class="nav-icon">📖</span>
+    <span>單字庫</span>
   </button>
 </nav>
 

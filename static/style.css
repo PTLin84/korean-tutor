@@ -367,7 +367,7 @@ html, body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0,0,0,0.65);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -377,12 +377,12 @@ html, body {
 .modal-overlay.hidden { display: none; }
 
 .modal-card {
-  background: var(--card);
+  background: #ffffff;
   border-radius: 18px;
   padding: 24px 20px 20px;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
 }
 
 .modal-title {
@@ -456,3 +456,160 @@ html, body {
   margin: 0;
   padding: 13px;
 }
+
+/* ── Word bank ──────────────────────────────────────────────────── */
+.words-total {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.words-search-wrap {
+  padding: 10px 16px 6px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.words-search-wrap input[type="search"] {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  font-size: 15px;
+  background: #fff;
+  color: var(--text);
+  outline: none;
+}
+.words-search-wrap input[type="search"]:focus {
+  border-color: var(--accent);
+}
+
+.wb-card {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+.wb-card:active { background: #f0f0f2; }
+
+.wb-card-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  gap: 8px;
+}
+
+.wb-card-left { flex: 1; min-width: 0; }
+
+.wb-korean {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.wb-meaning {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.wb-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+
+.wb-date {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.srs-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+.srs-overdue  { background: #fde8e8; color: #c0392b; }
+.srs-today    { background: #fff3cd; color: #856404; }
+.srs-soon     { background: #e8f4fd; color: #1a6a9a; }
+.srs-future   { background: #f0f0f2; color: var(--text-secondary); }
+
+.wb-arrow {
+  font-size: 20px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+  transition: transform 0.15s;
+}
+
+/* Expanded detail */
+.wb-detail {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+  background: #fafafa;
+}
+.wb-detail.hidden { display: none; }
+
+.wb-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin: 12px 0 6px;
+}
+
+.wb-section-body {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.wb-sentence {
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border: 1px solid var(--border);
+}
+.wb-sentence-korean { font-size: 14px; font-weight: 600; color: var(--text); }
+.wb-sentence-chinese { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+.wb-related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wb-related-chip {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Load more */
+.words-load-more {
+  padding: 16px;
+  text-align: center;
+}
+.btn-load-more {
+  background: none;
+  border: 1.5px solid var(--accent);
+  color: var(--accent);
+  border-radius: 12px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+.btn-load-more:active { opacity: 0.7; }
