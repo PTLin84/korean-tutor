@@ -219,24 +219,24 @@ html, body {
   align-self: flex-start;
 }
 .card-korean {
-  font-size: 44px;
+  font-size: 53px;
   font-weight: 700;
   line-height: 1.2;
   color: var(--accent);
 }
 .card-meaning {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 600;
   color: var(--text);
 }
 .card-sentence {
-  font-size: 17px;
+  font-size: 20px;
   color: var(--text-secondary);
   font-style: italic;
   padding: 0 8px;
 }
 .card-notes {
-  font-size: 15px;
+  font-size: 18px;
   color: var(--text-secondary);
   background: var(--bg);
   border-radius: 8px;
@@ -245,7 +245,7 @@ html, body {
   text-align: left;
 }
 .card-hint {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text-secondary);
   margin-top: 8px;
 }
