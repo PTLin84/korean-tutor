@@ -162,6 +162,24 @@ def get_augmentation(word_id):
 
 # ── Word bank ─────────────────────────────────────────────────────────────────
 
+@app.route("/word/<int:word_id>", methods=["DELETE"])
+def delete_word(word_id):
+    with db.get_db() as conn:
+        # Verify word exists
+        row = conn.execute("SELECT korean FROM words WHERE id = ?", (word_id,)).fetchone()
+        if not row:
+            return jsonify({"error": "not found"}), 404
+        korean = row["korean"]
+
+        # Cascade delete: children first, then parent
+        conn.execute("DELETE FROM review_log    WHERE word_id = ?", (word_id,))
+        conn.execute("DELETE FROM review_cards  WHERE word_id = ?", (word_id,))
+        conn.execute("DELETE FROM augmentations WHERE word_id = ?", (word_id,))
+        conn.execute("DELETE FROM words         WHERE id = ?",      (word_id,))
+
+    return jsonify({"deleted": word_id, "korean": korean})
+
+
 @app.route("/words", methods=["GET"])
 def list_words():
     page   = max(1, int(request.args.get("page", 1)))

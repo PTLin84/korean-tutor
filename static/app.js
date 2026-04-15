@@ -494,6 +494,8 @@ async function fetchWords(replace = false) {
       list.appendChild(el.firstChild);
     });
 
+    attachSwipeListeners();
+
     // Load more button
     const lmBtn = document.getElementById('words-load-more');
     if (wbHasMore) {
@@ -592,15 +594,144 @@ function wbCard(w) {
          ${usageNotes}${related}${mistakes}
        </div>` : '';
 
-  return `<div class="wb-card" onclick="toggleWordDetail(${w.id})">
-    <div class="wb-card-main">
-      <div class="wb-card-left">
-        <div class="wb-korean">${esc(w.korean)}</div>
-        <div class="wb-meaning">${esc(w.english)}</div>
-        <div class="wb-meta">${date}${badge}</div>
-      </div>
-      <div class="wb-arrow" id="wb-arrow-${w.id}">${hasAug ? '›' : ''}</div>
+  return `<div class="wb-row" id="wb-row-${w.id}">
+    <div class="wb-delete-bg">
+      <button class="wb-delete-btn" onclick="confirmDeleteWord(${w.id}, '${esc(w.korean)}')">
+        🗑 刪除
+      </button>
     </div>
-    ${detail}
+    <div class="wb-card" id="wb-card-${w.id}" onclick="toggleWordDetail(${w.id})">
+      <div class="wb-card-main">
+        <div class="wb-card-left">
+          <div class="wb-korean">${esc(w.korean)}</div>
+          <div class="wb-meaning">${esc(w.english)}</div>
+          <div class="wb-meta">${date}${badge}</div>
+        </div>
+        <div class="wb-arrow" id="wb-arrow-${w.id}">${hasAug ? '›' : ''}</div>
+      </div>
+      ${detail}
+    </div>
   </div>`;
+}
+
+// ── Swipe-to-delete ───────────────────────────────────────────────────────────
+
+const SWIPE_REVEAL   = 80;   // px left to lock card open
+const SWIPE_MIN_MOVE = 10;   // px horizontal before it's treated as a swipe
+
+let swipeState = null;        // active touch/drag state
+let openSwipeId = null;       // word id whose card is currently swiped open
+
+// Attach swipe listeners after cards are rendered
+function attachSwipeListeners() {
+  document.querySelectorAll('.wb-card[id^="wb-card-"]').forEach(card => {
+    const id = parseInt(card.id.replace('wb-card-', ''));
+    // Avoid double-binding
+    if (card.dataset.swipeBound) return;
+    card.dataset.swipeBound = '1';
+
+    // Touch
+    card.addEventListener('touchstart',  e => swipeStart(e, id, e.touches[0].clientX), { passive: true });
+    card.addEventListener('touchmove',   e => swipeMove(e, id, e.touches[0].clientX),  { passive: false });
+    card.addEventListener('touchend',    e => swipeEnd(id));
+
+    // Mouse (desktop)
+    card.addEventListener('mousedown',   e => swipeStart(e, id, e.clientX));
+    card.addEventListener('mousemove',   e => swipeMove(e, id, e.clientX));
+    card.addEventListener('mouseup',     e => swipeEnd(id));
+    card.addEventListener('mouseleave',  e => swipeEnd(id));
+  });
+
+  // Tap anywhere outside an open card to close it
+  document.addEventListener('click', closeOpenSwipe, { capture: true });
+}
+
+function swipeStart(e, id, clientX) {
+  swipeState = { id, startX: clientX, currentX: clientX, isSwiping: false };
+}
+
+function swipeMove(e, id, clientX) {
+  if (!swipeState || swipeState.id !== id) return;
+  const dx = clientX - swipeState.startX;
+  swipeState.currentX = clientX;
+
+  // Only start swiping once past the minimum horizontal movement
+  if (!swipeState.isSwiping && Math.abs(dx) < SWIPE_MIN_MOVE) return;
+  swipeState.isSwiping = true;
+
+  // Only allow leftward swipe
+  const offset = Math.min(0, dx);
+  const card = document.getElementById(`wb-card-${id}`);
+  if (!card) return;
+
+  // Prevent page scroll while swiping horizontally
+  if (e.cancelable) e.preventDefault();
+
+  card.style.transition = 'none';
+  card.style.transform  = `translateX(${offset}px)`;
+}
+
+function swipeEnd(id) {
+  if (!swipeState || swipeState.id !== id) return;
+  const dx = swipeState.currentX - swipeState.startX;
+  swipeState = null;
+
+  const card = document.getElementById(`wb-card-${id}`);
+  if (!card) return;
+  card.style.transition = '';
+
+  if (dx < -SWIPE_REVEAL) {
+    // Lock open — close any other open card first
+    if (openSwipeId && openSwipeId !== id) snapCardClosed(openSwipeId);
+    openSwipeId = id;
+    card.style.transform = `translateX(-${SWIPE_REVEAL}px)`;
+  } else {
+    snapCardClosed(id);
+  }
+}
+
+function snapCardClosed(id) {
+  const card = document.getElementById(`wb-card-${id}`);
+  if (!card) return;
+  card.style.transition = 'transform 0.2s ease';
+  card.style.transform  = 'translateX(0)';
+  if (openSwipeId === id) openSwipeId = null;
+}
+
+function closeOpenSwipe(e) {
+  if (!openSwipeId) return;
+  const row = document.getElementById(`wb-row-${openSwipeId}`);
+  // If click is inside the open card's row, let the event through (e.g. delete button)
+  if (row && row.contains(e.target)) return;
+  snapCardClosed(openSwipeId);
+}
+
+async function confirmDeleteWord(id, korean) {
+  // Close the swipe reveal
+  snapCardClosed(id);
+
+  try {
+    await api(`/word/${id}`, { method: 'DELETE' });
+
+    // Animate row out then remove it
+    const row = document.getElementById(`wb-row-${id}`);
+    if (row) {
+      row.style.transition = 'opacity 0.25s, max-height 0.3s';
+      row.style.overflow   = 'hidden';
+      row.style.opacity    = '0';
+      row.style.maxHeight  = row.offsetHeight + 'px';
+      setTimeout(() => { row.style.maxHeight = '0'; }, 50);
+      setTimeout(() => { row.remove(); updateWbTotalAfterDelete(); }, 350);
+    }
+
+    showToast(`已刪除：${korean}`);
+  } catch (e) {
+    showToast('刪除失敗，請重試');
+  }
+}
+
+function updateWbTotalAfterDelete() {
+  wbTotal = Math.max(0, wbTotal - 1);
+  document.getElementById('words-total-label').textContent =
+    wbSearch ? `${wbTotal} 個結果` : `共 ${wbTotal} 個單字`;
 }
