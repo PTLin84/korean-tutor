@@ -18,6 +18,7 @@ korean-tutor/
 │   ├── index.html  # Single-page app shell (all views in one file)
 │   ├── app.js      # Vanilla JS frontend (state, API calls, UI logic)
 │   └── style.css   # Mobile-first CSS with CSS variables
+├── app.log         # Runtime log (gitignored)
 └── korean_app.db   # SQLite database (gitignored)
 ```
 
@@ -35,14 +36,15 @@ data model:
 | `review_log` | Immutable history of every review result |
 
 All database access goes through a `@contextmanager` that handles
-commit/rollback automatically.
+commit/rollback automatically. Key events (word add/delete, validation flags,
+augmentation results, review outcomes) are written to `app.log` for debugging.
 
 ### Frontend — Vanilla JS SPA
 
-A single HTML file with three views (Dashboard, Log Session, Review) toggled by
-CSS classes — no framework, no build step. State is kept in module-level JS
-variables; the active session survives page refresh via `localStorage` (cleared
-at end of day).
+A single HTML file with four views (Dashboard, Log Session, Review, Word Bank)
+toggled by CSS classes — no framework, no build step. State is kept in
+module-level JS variables; the active session survives page refresh via
+`localStorage` (cleared at end of day).
 
 ### AI Layer — Claude API
 
@@ -55,7 +57,8 @@ Two separate Claude calls with different latency/cost tradeoffs:
 
 Augmentation runs in a background thread so it never blocks the UI. The
 frontend polls `/word/<id>/augmentation` every 3 seconds until the result
-arrives.
+arrives. Neither the review answer-checking nor any other UI interaction uses
+tokens.
 
 ### Spaced Repetition — SM-2
 
@@ -83,7 +86,8 @@ flashcard → fill-in-blank → multiple choice → repeat.
 - Before saving, Claude (Haiku) checks if the Korean spelling is correct and
   whether the meaning matches
 - If an issue is found, a diff modal shows the original vs. suggested correction
-- User can accept the suggestion or keep their original input
+- Three choices: **返回修改** (go back to edit), **保留原本** (keep original),
+  **接受建議** (accept suggestion)
 - Validation failures never block saving — the word always goes through
 
 ### AI Augmentation
@@ -98,7 +102,17 @@ flashcard → fill-in-blank → multiple choice → repeat.
 - Daily review queue based on SM-2 due dates
 - Three rotating question formats: flashcard, fill-in-blank, multiple choice
 - Pass / Hard / Fail grading updates the next review interval
+- Fill-in-blank: type Korean given the Chinese meaning (example sentence hidden
+  to avoid hinting; hint button planned)
 - Multiple choice distractors drawn from the full word bank
+
+### Word Bank
+- Paginated list of all saved words with search (Korean or Chinese)
+- SRS status badge per word (overdue / today / upcoming)
+- Tap a card to expand AI-generated sentences, usage notes, related words,
+  and common mistakes
+- Swipe left (touch or mouse) to reveal a delete button; deleting cascades
+  through all SRS data for that word
 
 ### Dashboard
 - Total word count, today's review count, due cards count
@@ -109,7 +123,8 @@ flashcard → fill-in-blank → multiple choice → repeat.
 ## Upcoming & Potential Features
 
 ### Near-term
-- **Edit / delete words** — fix mistakes after a word has been saved
+- **Hint button in fill-in-blank** — reveal the example sentence on demand
+- **Edit words** — fix mistakes after a word has been saved
 - **Session browser** — view past sessions and their word lists
 - **Audio pronunciation** — text-to-speech for Korean words during review
 - **Export** — download vocabulary as CSV or Anki deck
@@ -123,7 +138,6 @@ flashcard → fill-in-blank → multiple choice → repeat.
 
 ### Review Improvements
 - **Listening mode** — play audio, type what you hear (dictation)
-- **Reverse mode** — show Chinese meaning, type the Korean
 - **Session replay** — re-review only the words from a specific class
 
 ### Infrastructure
