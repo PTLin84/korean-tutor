@@ -353,10 +353,12 @@ function showFillBlank(card) {
     sentenceEl.style.display = 'none';
   }
 
-  document.getElementById('fb-input').value = '';
+  const fbInput = document.getElementById('fb-input');
+  fbInput.disabled = false;
+  fbInput.value = '';
   document.getElementById('fb-result').classList.add('hidden');
   document.getElementById('fb-buttons').classList.add('hidden');
-  setTimeout(() => document.getElementById('fb-input').focus(), 300);
+  setTimeout(() => fbInput.focus(), 300);
 }
 
 function checkFillBlank() {
