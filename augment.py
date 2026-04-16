@@ -27,7 +27,7 @@ def augment_word(korean: str, meaning: str, sentence: str) -> dict:
 繁體中文意思：{meaning}
 課堂例句：{sentence if sentence else "（無）"}
 
-請回傳以下 JSON（只回傳 JSON，無其他文字）。每個欄位請保持簡短精要，整體回應必須在 800 tokens 以內：
+請回傳以下 JSON（只回傳 JSON，無其他文字）。每個欄位請保持簡短精要，整體回應必須在 900 tokens 以內：
 {{
   "sentences": [
     {{"korean": "初級例句（15字以內）", "chinese": "繁體中文翻譯", "level": "beginner"}},
