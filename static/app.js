@@ -270,6 +270,10 @@ async function loadReviewQueue() {
 
   try {
     reviewQueue = await api('/review/queue');
+    for (let i = reviewQueue.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [reviewQueue[i], reviewQueue[j]] = [reviewQueue[j], reviewQueue[i]];
+    }
     reviewIndex = 0;
 
     if (reviewQueue.length === 0) {
