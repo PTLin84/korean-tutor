@@ -130,6 +130,9 @@ flashcard → fill-in-blank → multiple choice → repeat.
 - **Export** — download vocabulary as CSV or Anki deck
 
 ### AI Enhancements
+- **Local LLM support** — route validation and augmentation through a local
+  open-source model (e.g. Ollama) instead of the Anthropic API, eliminating
+  per-token costs
 - **Conversation-based lookup** — ask Claude questions about a word mid-review
 - **Difficulty auto-detection** — use Claude to estimate word difficulty and
   seed the initial SM-2 ease factor accordingly
