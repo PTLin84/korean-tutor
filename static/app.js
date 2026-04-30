@@ -413,6 +413,10 @@ async function submitResult(result) {
     });
   } catch (e) { console.error('submitResult', e); }
 
+  if (result === 'fail') {
+    reviewQueue.push(currentCard);
+  }
+
   reviewIndex++;
   if (reviewIndex < reviewQueue.length) {
     showCard(reviewQueue[reviewIndex]);
