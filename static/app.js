@@ -5,6 +5,7 @@ let sessionWordCount = 0;
 let reviewQueue = [];
 let reviewIndex = 0;
 let currentCard = null;
+let reviewedThisSession = new Set(); // word IDs already graded; re-queued repeats skip SRS update
 let cardFlipped = false;
 let mcAnswered = false;
 let fbChecked = false;
@@ -269,6 +270,7 @@ async function loadReviewQueue() {
   fbChecked = false;
 
   try {
+    reviewedThisSession = new Set();
     reviewQueue = await api('/review/queue');
     for (let i = reviewQueue.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -406,12 +408,15 @@ function selectMCOption(btn, selected) {
 
 // ── Submit review result ──────────────────────────────────────────────────────
 async function submitResult(result) {
-  try {
-    await api('/review/result', {
-      method: 'POST',
-      body: { word_id: currentCard.id, result }
-    });
-  } catch (e) { console.error('submitResult', e); }
+  if (!reviewedThisSession.has(currentCard.id)) {
+    reviewedThisSession.add(currentCard.id);
+    try {
+      await api('/review/result', {
+        method: 'POST',
+        body: { word_id: currentCard.id, result }
+      });
+    } catch (e) { console.error('submitResult', e); }
+  }
 
   if (result === 'fail') {
     reviewQueue.push(currentCard);
