@@ -407,19 +407,25 @@ function selectMCOption(btn, selected) {
 }
 
 // ── Submit review result ──────────────────────────────────────────────────────
-async function submitResult(result) {
-  if (!reviewedThisSession.has(currentCard.id)) {
-    reviewedThisSession.add(currentCard.id);
-    try {
-      await api('/review/result', {
-        method: 'POST',
-        body: { word_id: currentCard.id, result }
-      });
-    } catch (e) { console.error('submitResult', e); }
+let _submitting = false;
+
+function submitResult(result) {
+  if (_submitting) return;
+  _submitting = true;
+
+  const card = currentCard;
+
+  // Fire API in background — don't block UI on network
+  if (!reviewedThisSession.has(card.id)) {
+    reviewedThisSession.add(card.id);
+    api('/review/result', {
+      method: 'POST',
+      body: { word_id: card.id, result }
+    }).catch(e => console.error('submitResult', e));
   }
 
   if (result === 'fail') {
-    reviewQueue.push(currentCard);
+    reviewQueue.push(card);
   }
 
   reviewIndex++;
@@ -430,6 +436,8 @@ async function submitResult(result) {
     document.getElementById('review-progress').textContent = '';
     loadDashboard();
   }
+
+  _submitting = false;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
